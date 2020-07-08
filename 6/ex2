@@ -1,0 +1,245 @@
+Программа должна обеспечить шифрование фалйа методом гаммирования. Гамма 64-битная задется в командной строке в виде набора 16 16-ричных цифр. Имя исходного и результирующего файлов задаются  командной строке. Программа должна корректно обрабатывать неверную командную строку, а также результаты файловых операций.
+
+	.model compact
+	.stack 100h
+	.data
+fdr	dw ?
+fdw	dw ?
+par	dw 3 dup (?)
+parl	db 3 dup (?)
+msg1	db 'Usage: crypto key filein fileout',13,10
+	db '	crypto - 64-bit hex value',13,10
+	db 'Crypto Version 1.0 Copyright (c) 2020 Dozen',13,10,0
+msg2	db 'Incorrect key: Key must consist of 16 16-digit number',13,10,0
+msg3	db ': Cannot open',13,10,0
+msg4	db ': Cannot create',13,10,0
+msg5	db 'Input/output error',13,10,0
+key	db 16 dup (?)
+keybin	db 8 dup (?)
+filein	db 80 dup (?)
+fileout	db 80 dup (?)
+	.fardata
+	db 65520 dup (?)
+	.code
+	.486
+	mov ax,@data
+	mov ds,ax
+	cld
+	movzx cx,es:[80h]
+	jcxz m3
+	xor bx,bx
+	mov di,81h
+	mov al,' '
+m1:	repe scasb
+	dec di
+	inc cx
+	shl bx,1
+	mov par[bx],di
+	shr bx,1
+	push di
+	repne scasb
+	dec di
+	pop dx
+	sub dx,di
+	neg dx
+	mov parl[bx],dl
+	inc bx
+	jcxz m2
+	inc cx
+	jmp m1
+m2:	cmp bx,3
+m3:	jne er
+	inc parl[bx-1]
+	cmp parl,16
+	jne erkey
+	push ds
+	push es
+	pop ds
+	pop es
+	mov cx,16
+	mov si,es:par
+	lea di,es:key
+	rep movsb
+	movzx cx,es:parl+1
+	mov si,es:par+2
+	lea di,es:filein
+	rep movsb
+	xor al,al
+	stosb
+	movzx cx,es:parl+2
+	mov si,es:par+4
+	lea di,es:fileout
+	rep movsb
+	stosb
+	mov cx,8
+	push es
+	pop ds
+	lea si,key
+	lea di,keybin
+m4:	lodsb
+	call hex
+	cmp al,0ffh
+	je erkey
+	mov ah,al
+	shl ah,4
+	lodsb
+	cmp al,0ffh
+	je erkey
+	or al,ah
+	stosb
+	loop m4
+	mov ax,3d00h
+	xor cx,cx
+	lea dx,filein
+	int 21h
+	jc erfilein
+	mov fdr,ax
+	mov ah,3ch
+	xor cx,cx
+	lea dx,fileout
+	int 21h
+	jc erfileout
+	mov fdw,ax
+	mov ax,seg far_data
+	mov ds,ax
+m5:	mov bx,es:fdr
+	mov cx,65520
+	xor dx,dx
+m6:	mov ah,3fh
+	int 21h
+	jc erio
+	or ax,ax       
+	je short m7
+	add dx,ax
+	sub cx,ax
+	jcxz m7
+	jmp m6
+m7:	or dx,dx
+	je short m10
+	sub cx,65520
+	neg cx
+	push cx
+	shr cx,3
+	inc cx
+	mov eax,dword ptr es:keybin
+	mov edx,dword ptr es:keybin+4
+	xor bx,bx
+m8:	xor [bx],eax
+	xor [bx+4],edx
+	add bx,8
+	loop m8
+	pop cx
+	mov bx,es:fdw
+	xor dx,dx
+m9:	mov ah,40h
+	int 21h
+	jc short erio
+	or ax,ax
+	je short erio
+	add dx,ax
+	sub cx,ax
+	jcxz m5
+	jmp m9
+m10:	mov ah,3eh
+	mov bx,es:fdr
+	int 21h
+	mov ah,3eh
+	mov bx,es:fdw
+	int 21h
+	xor al,al
+ex:	mov ah,4ch
+	int 21h
+er:	push offset msg1
+	call output
+	mov al,1
+	jmp ex
+erkey:	push offset msg2
+	call output
+	mov al,2
+	jmp ex
+erfilein: push offset filein
+	call output
+	push offset msg3
+	call output
+	mov al,3
+	jmp ex
+erfileout: mov ah,3eh
+	mov bx,fdr
+	int 21h 
+	push offset fileout
+	call output
+	push offset msg4
+	call output
+	mov al,4
+	jmp ex
+erio:	push es
+	pop ds
+	mov ah,3eh
+	mov bx,fdr
+	int 21h
+	mov ah,3eh
+	mov bx,fdw
+	int 21h
+	push offset msg5
+	call output
+	mov al,5
+	jmp ex
+hex	proc
+	locals @@
+	cmp al,'0'
+	jb short @@er
+	cmp al,'9'
+	ja @@m1
+	sub al,'0'
+	jmp short @@ex
+@@m1:	cmp al,'A'
+	jb short @@er
+	cmp al,'F'
+	ja @@m2
+	sub al,'A'-10
+	jmp short @@ex
+@@m2:	cmp al,'a'
+	jb short @@er
+	cmp al,'f'
+	ja @@er
+	sub al,'a'-10
+	jmp short @@ex 
+@@er:	mov al,0ffh
+@@ex:	ret
+	endp
+output	proc
+	locals @@
+@@message	equ [bp+4]
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push di
+	push ds
+	push es
+	push ds
+	pop es
+	mov di,@@message
+	mov cx,4096
+	xor al,al
+	repne scasb
+	sub cx,4095
+	neg cx
+	mov ah,40h
+	xor bx,bx
+	inc bx
+	mov dx,@@message
+	int 21h
+	pop es
+	pop ds
+	pop di
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret 2
+	endp
+	end

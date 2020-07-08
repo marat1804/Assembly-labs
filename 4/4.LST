@@ -1,0 +1,206 @@
+Turbo Assembler	 Version 3.1	    04/09/20 19:15:30	    Page 1
+4.asm
+
+
+
+      1					 ;Обеспечить выравнивание	строк текста	«по		    +
+      2					 ширине»	за счет равномерной вставки			    +
+      3					 дополнительных пробелов между словами.
+      4	    0000				 .model	small
+      5	    0000				 .stack	100h
+      6						 .486
+      7	    0000				 .data
+      8	    0000  32*(????)		 ptrs	 dw 50 dup(?)
+      9	    0064  32*(??)		 lens	 db 50 dup(?)
+     10	    0096  20 09	00		 delim	 db ' ',9,0
+     11	    0099  78 63	64 72 20 61 20+	 string	 db 'xcdr a abdr    edr	 zaq aqw  jgh t	qwe easrtyu zeq',0
+     12		  61 62	64 72 20 20 20+
+     13		  20 65	64 72 20 20 7A+
+     14		  61 71	20 61 71 77 20+
+     15		  20 6A	67 68 20 74 20+
+     16		  71 77	65 20 65 61 73+
+     17		  72 74	79 75 20 7A 65+
+     18		  71 00
+     19	    00CC  ??			 n		 db ?
+     20	    00CD  50			 max		 db	 80
+     21	    00CE  52*(??)		 newstring db 82 dup(?); новая строка
+     22	    0120				 .code
+     23	    0000  B8 0000s			 mov ax, @data
+     24	    0003  8E D8				 mov ds, ax
+     25	    0005  8E C0				 mov es, ax
+     26	    0007  FC				 cld
+     27	    0008  BE 0099r			 lea si, string
+     28	    000B  BF 0096r			 lea di, delim
+     29	    000E  33 DB				 xor bx, bx
+     30	    0010  E8 008F		 m1:	 call space
+     31	    0013  80 3C	00			 cmp byte ptr [si],0
+     32	    0016  74 1B				 je short m2
+     33	    0018  D1 E3				 shl bx,1
+     34	    001A  89 B7	0000r			 mov ptrs[bx],si
+     35	    001E  D1 EB				 shr bx,1
+     36	    0020  8B CE				 mov cx,si
+     37	    0022  E8 009E			 call words
+     38	    0025  2B CE				 sub cx,si
+     39	    0027  F7 D9				 neg cx;
+     40	    0029  88 8F	0064r			 mov lens[bx],cl
+     41	    002D  43				 inc bx
+     42	    002E  80 3C	00			 cmp byte ptr [si],0
+     43	    0031  75 DD				 jne short m1
+     44	    0033  88 1E	00CCr		 m2:	 mov n,	bl
+     45	    0037  FE CB				 dec bl
+     46	    0039  8A 0E	00CCr			 mov cl, n
+     47	    003D  BE 0064r			 lea si, lens
+     48	    0040  AC			 m3:	 lodsb
+     49	    0041  02 D8				 add bl, al
+     50	    0043  E2 FB				 loop m3
+     51	    0045  3A 1E	00CDr			 cmp bl,max
+     52	    0049  7E 05				 jle short m4
+     53	    004B  B8 4C01			 mov ax, 4c01h
+     54	    004E  CD 21				 int 21h
+     55	    0050  2A 1E	00CCr		 m4:	 sub bl, n
+     56	    0054  FE C3				 inc bl
+     57	    0056  2A 1E	00CDr			 sub bl, max
+Turbo Assembler	 Version 3.1	    04/09/20 19:15:30	    Page 2
+4.asm
+
+
+
+     58	    005A  F6 DB				 neg bl
+     59	    005C  33 C0				 xor ax, ax
+     60	    005E  8A C3				 mov al, bl
+     61	    0060  8A 1E	00CCr			 mov bl, n
+     62	    0064  FE CB				 dec bl
+     63	    0066  F6 F3				 div bl
+     64	    0068  8B D0				 mov dx, ax
+     65	    006A  8A 0E	00CCr			 mov cl, n
+     66	    006E  33 DB				 xor bx, bx
+     67	    0070  BF 00CEr			 lea di, newstring
+     68	    0073  51			 m5: push cx
+     69	    0074  0B DB				 or bx,	bx
+     70	    0076  74 0E				 je short m6
+     71	    0078  8A CA				 mov cl, dl
+     72	    007A  B0 20				 mov al, ' '
+     73	    007C  F3> AA			 rep stosb
+     74	    007E  80 FE	00			 cmp dh, 0
+     75	    0081  74 03				 je short m6
+     76	    0083  AA				 stosb
+     77	    0084  FE CE				 dec dh
+     78	    0086  D1 E3			 m6:	 shl bx,1
+     79	    0088  8B B7	0000r			 mov si,ptrs[bx]
+     80	    008C  D1 EB				 shr bx,1
+     81	    008E  8A 8F	0064r			 mov cl,lens[bx]
+     82	    0092  32 ED				 xor ch,ch
+     83	    0094  F3> A4			 rep movsb
+     84	    0096  43				 inc bx
+     85	    0097  59				 pop cx
+     86	    0098  E2 D9				 loop m5
+     87	    009A  32 C0				 xor al,al
+     88	    009C  AA				 stosb
+     89	    009D  B8 4C00			 mov ax, 4c00h
+     90	    00A0  CD 21				 int 21h
+     91	    00A2			 space	 proc
+     92						 locals	@@
+     93	    00A2  50				 push ax
+     94	    00A3  51				 push cx
+     95	    00A4  57				 push di
+     96	    00A5  33 C0				 xor ax, ax
+     97	    00A7  B9 FFFF			 mov cx,65535
+     98	    00AA  F2> AE			 repne scasb
+     99	    00AC  F7 D9				 neg cx
+    100	    00AE  49				 dec cx
+    101	    00AF  51				 push cx
+    102	    00B0  59			 @@m1:	 pop cx
+    103	    00B1  5F				 pop di
+    104	    00B2  57				 push di
+    105	    00B3  51				 push cx
+    106	    00B4  AC				 lodsb
+    107	    00B5  F2> AE			 repne scasb
+    108	    00B7  E3 02				 jcxz @@m2
+    109	    00B9  EB F5				 jmp @@m1
+    110	    00BB  4E			 @@m2:	 dec si
+    111	    00BC  83 C4	02			 add sp,2
+    112	    00BF  5F				 pop di
+    113	    00C0  59				 pop cx
+    114	    00C1  58				 pop ax
+Turbo Assembler	 Version 3.1	    04/09/20 19:15:30	    Page 3
+4.asm
+
+
+
+    115	    00C2  C3				 ret
+    116	    00C3				 endp
+    117	    00C3			 words	 proc
+    118						 locals	@@
+    119	    00C3  50				 push ax
+    120	    00C4  51				 push cx
+    121	    00C5  57				 push di
+    122	    00C6  32 C0				 xor al,al
+    123	    00C8  B9 FFFF			 mov cx,65535
+    124	    00CB  F2> AE			 repne scasb
+    125	    00CD  F7 D9				 neg cx
+    126	    00CF  51				 push cx
+    127	    00D0  59			 @@m:	 pop cx
+    128	    00D1  5F				 pop di
+    129	    00D2  57				 push di
+    130	    00D3  51				 push cx
+    131	    00D4  AC				 lodsb
+    132	    00D5  F2> AE			 repne scasb
+    133	    00D7  E3 F7				 jcxz @@m
+    134	    00D9  4E				 dec si
+    135	    00DA  83 C4	02			 add sp,2
+    136	    00DD  5F				 pop di
+    137	    00DE  59				 pop cx
+    138	    00DF  58				 pop ax
+    139	    00E0  C3				 ret
+    140	    00E1				 endp
+    141						 end
+Turbo Assembler	 Version 3.1	    04/09/20 19:15:30	    Page 4
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "04/09/20"
+??FILENAME			  Text	 "4	  "
+??TIME				  Text	 "19:15:30"
+??VERSION			  Number 030A
+@32BIT				  Text	 0
+@@M				  Near	 _TEXT:00D0
+@@M1				  Near	 _TEXT:00B0
+@@M2				  Near	 _TEXT:00BB
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 4
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+DELIM				  Byte	 DGROUP:0096
+LENS				  Byte	 DGROUP:0064
+M1				  Near	 _TEXT:0010
+M2				  Near	 _TEXT:0033
+M3				  Near	 _TEXT:0040
+M4				  Near	 _TEXT:0050
+M5				  Near	 _TEXT:0073
+M6				  Near	 _TEXT:0086
+MAX				  Byte	 DGROUP:00CD
+N				  Byte	 DGROUP:00CC
+NEWSTRING			  Byte	 DGROUP:00CE
+PTRS				  Word	 DGROUP:0000
+SPACE				  Near	 _TEXT:00A2
+STRING				  Byte	 DGROUP:0099
+WORDS				  Near	 _TEXT:00C3
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0120 Word	  Public  DATA
+_TEXT				  16  00E1 Word	  Public  CODE
+

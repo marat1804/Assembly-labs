@@ -1,0 +1,113 @@
+Turbo Assembler	 Version 3.1	    03/26/20 18:29:07	    Page 1
+3.asm
+
+
+
+      1	    0000				 .model	small
+      2	    0000				 .stack	100h
+      3						 .486
+      4	    0000				 .data
+      5		  =0003			 Rows	 equ 3
+      6		  =0003			 Cols	 equ	 3
+      7	    0000  0009			 len		 dw	 Rows*Cols
+      8	    0002  0017 0004 000A 000F +	 matrix	 dw	 23, 4,	10, 15,	17, 14,	2, 71, 66
+      9		  0011 000E 0002 0047 +
+     10		  0042
+     11	    0014				 .code
+     12	    0000  B8 0000s			 mov ax, @data
+     13	    0003  8E D8				 mov ds, ax
+     14	    0005  8B 0E	0000r			 mov cx, len
+     15	    0009  FC				 cld
+     16	    000A  BB 0002r			 lea bx,matrix
+     17
+     18	    000D  8B 17				 mov dx,[bx];min
+     19	    000F  8B 3F				 mov di,[bx];max
+     20	    0011  43				 inc bx
+     21	    0012  43				 inc bx
+     22	    0013  49				 dec cx
+     23	    0014			 l1:
+     24	    0014  8B 07				 mov ax, [bx]
+     25	    0016  3B C7				 cmp ax,di
+     26	    0018  7D 07				 jnl short more
+     27	    001A  3B C2				 cmp ax, dx
+     28	    001C  7C 08				 jl short less
+     29	    001E  EB 08	90			 jmp l
+     30	    0021			 more:
+     31	    0021  8B F8				 mov di, ax
+     32	    0023  EB 03	90			 jmp l
+     33	    0026			 less:
+     34	    0026  8B D0				 mov dx,ax
+     35	    0028			 l:
+     36	    0028  43				 inc bx
+     37	    0029  43				 inc bx
+     38	    002A  E2 E8				 loop l1
+     39
+     40	    002C  BB 0002r			 lea bx, matrix
+     41	    002F  8B 0E	0000r			 mov cx, len
+     42
+     43	    0033			 l2:
+     44	    0033  8B 07				 mov ax, [bx]
+     45	    0035  D1 E8				 shr ax, 1
+     46	    0037  73 07	90 90			 jae zero
+     47	    003B			 ones:
+     48	    003B  89 3F				 mov [bx],di
+     49	    003D  EB 03	90			 jmp l3
+     50	    0040			 zero:
+     51	    0040  89 17				 mov [bx], dx
+     52	    0042			 l3:
+     53	    0042  43				 inc bx
+     54	    0043  43				 inc bx
+     55	    0044  E2 ED				 loop l2
+     56
+     57	    0046  B8 4C00			 mov ax, 4c00h
+Turbo Assembler	 Version 3.1	    03/26/20 18:29:07	    Page 2
+3.asm
+
+
+
+     58	    0049  CD 21				 int 21h
+     59						 end
+Turbo Assembler	 Version 3.1	    03/26/20 18:29:07	    Page 3
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/26/20"
+??FILENAME			  Text	 "3	  "
+??TIME				  Text	 "18:29:07"
+??VERSION			  Number 030A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 3
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+COLS				  Number 0003
+L				  Near	 _TEXT:0028
+L1				  Near	 _TEXT:0014
+L2				  Near	 _TEXT:0033
+L3				  Near	 _TEXT:0042
+LEN				  Word	 DGROUP:0000
+LESS				  Near	 _TEXT:0026
+MATRIX				  Word	 DGROUP:0002
+MORE				  Near	 _TEXT:0021
+ONES				  Near	 _TEXT:003B
+ROWS				  Number 0003
+ZERO				  Near	 _TEXT:0040
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0014 Word	  Public  DATA
+_TEXT				  16  004B Word	  Public  CODE
+

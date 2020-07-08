@@ -1,0 +1,86 @@
+Turbo Assembler	 Version 3.1	    02/23/20 13:09:22	    Page 1
+1.asm
+
+
+
+      1	    0000			 .model	small
+      2	    0000			 .stack	100h
+      3					 .486
+      4	    0000			 .data
+      5	    0000  0028			 a dw 40
+      6	    0002  0064			 b dw 100
+      7	    0004  0014			 c dw 20
+      8	    0006  0014			 d dw 20
+      9	    0008  001E			 e dw 30
+     10	    000A			 .code
+     11	    0000			 Start:
+     12	    0000  B8 0000s		 mov ax, @data
+     13	    0003  8E D8			 mov ds, ax
+     14	    0005  8B 1E	0000r		 mov bx, a
+     15	    0009  D1 E3			 shl bx, 1
+     16	    000B  A1 0002r		 mov ax,b
+     17	    000E  F7 E8			 imul ax
+     18	    0010  03 C3			 add ax, bx
+     19	    0012  8B 0E	0000r		 mov cx, a
+     20	    0016  0F AF	C9		 imul cx, cx
+     21	    0019  C1 E1	02		 shl cx, 2
+     22	    001C  F7 F9			 idiv cx
+     23	    001E  66| C1 C0 10		 ROL eax, 16
+     24	    0022  8B C2			 mov ax, dx
+     25	    0024  66| C1 C8 10		 ROR eax, 16
+     26	    0028  66| 50		 push eax
+     27	    002A  A1 0004r		 mov ax, c
+     28	    002D  F7 E8			 imul ax
+     29	    002F  F7 2E	0000r		 imul a
+     30	    0033  8B 1E	0006r		 mov bx, d
+     31	    0037  0F AF	DB		 imul bx,bx
+     32	    003A  2B C3			 sub ax, bx
+     33	    003C  8B 1E	0008r		 mov bx, e
+     34	    0040  D1 E3			 shl bx, 1
+     35	    0042  F7 FB			 idiv bx
+     36	    0044  66| C1 C0 10		 ROL eax, 16
+     37	    0048  8B C2			 mov ax, dx
+     38	    004A  66| C1 C8 10		 ROR eax, 16
+     39	    004E  66| 5B		 pop ebx
+     40	    0050  03 C3			 add ax, bx
+     41	    0052  B8 4C00		 mov ax, 4c00h;	end
+     42	    0055  CD 21			 int 21h
+     43					 end Start
+Turbo Assembler	 Version 3.1	    02/23/20 13:09:22	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "02/23/20"
+??FILENAME			  Text	 "1	  "
+??TIME				  Text	 "13:09:22"
+??VERSION			  Number 030A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 1
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+A				  Word	 DGROUP:0000
+B				  Word	 DGROUP:0002
+C				  Word	 DGROUP:0004
+D				  Word	 DGROUP:0006
+E				  Word	 DGROUP:0008
+START				  Near	 _TEXT:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  000A Word	  Public  DATA
+_TEXT				  16  0057 Word	  Public  CODE
+

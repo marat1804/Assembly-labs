@@ -1,0 +1,70 @@
+Turbo Assembler	 Version 3.1	    03/12/20 10:10:13	    Page 1
+2.asm
+
+
+
+      1	    0000				 .model	small
+      2	    0000				 .stack	100h
+      3						 .486
+      4	    0000				 .data
+      5	    0000  0043				 a dw 67
+      6	    0002				 .code
+      7	    0000			 Start:
+      8	    0000  B8 0000s			 mov ax, @data
+      9	    0003  8E D8				 mov ds, ax
+     10	    0005  A1 0000r			 mov ax, a
+     11	    0008  74 12	90 90			 jz en
+     12	    000C			 lp:
+     13	    000C  D1 E8				 shr ax, 1
+     14	    000E  74 0C	90 90			 jz en
+     15	    0012  73 05	90 90			 jae zero
+     16	    0016			 one:
+     17	    0016  41				 inc cx
+     18	    0017  EB F3				 jmp lp
+     19	    0019			 zero:
+     20	    0019  42				 inc dx
+     21	    001A  EB F0				 jmp lp
+     22	    001C			 en:
+     23	    001C  41				 inc cx
+     24	    001D  03 CA				 add cx, dx
+     25	    001F  B8 4C00			 mov ax, 4c00h;	end
+     26	    0022  CD 21				 int 21h
+     27						 end Start
+Turbo Assembler	 Version 3.1	    03/12/20 10:10:13	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/12/20"
+??FILENAME			  Text	 "2	  "
+??TIME				  Text	 "10:10:13"
+??VERSION			  Number 030A
+@32BIT				  Text	 0
+@CODE				  Text	 _TEXT
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F1FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 DGROUP
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 2
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 2
+@STACK				  Text	 DGROUP
+@WORDSIZE			  Text	 2
+A				  Word	 DGROUP:0000
+EN				  Near	 _TEXT:001C
+LP				  Near	 _TEXT:000C
+ONE				  Near	 _TEXT:0016
+START				  Near	 _TEXT:0000
+ZERO				  Near	 _TEXT:0019
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  16  0100 Para	  Stack	  STACK
+  _DATA				  16  0002 Word	  Public  DATA
+_TEXT				  16  0024 Word	  Public  CODE
+
